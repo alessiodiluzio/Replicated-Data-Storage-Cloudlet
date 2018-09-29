@@ -8,18 +8,15 @@ public class DataNodeStatistic implements Serializable {
 
     private Long serverRequests = 0L;
     private Long serverSize = 0L;
+
     private ArrayList<FileInfo> fileInfos = new ArrayList<>();
     private ArrayList<FileInfo> filePerSize = new ArrayList<>();
     private ArrayList<FileInfo> filePerRequest = new ArrayList<>();
     private Integer dataNodePort;
-
+    private long milliseconds_timer;
 
     public DataNodeStatistic(Integer dataNodePort) {
         this.dataNodePort = dataNodePort;
-    }
-
-    public Integer getDataNodePort() {
-        return dataNodePort;
     }
 
     public void incrementSingleFileRequest(String fileName){
@@ -54,6 +51,10 @@ public class DataNodeStatistic implements Serializable {
 
     }
 
+    public ArrayList<FileInfo> getFileInfos() {
+        return fileInfos;
+    }
+
     public Long getServerRequests() {
         return serverRequests;
     }
@@ -73,6 +74,17 @@ public class DataNodeStatistic implements Serializable {
         return filePerSize;
     }
 
+    public Integer getDataNodePort() {
+        return dataNodePort;
+    }
+
+    public long getMilliseconds_timer() {
+        return milliseconds_timer;
+    }
+
+    public void setMilliseconds_timer(long milliseconds_timer) {
+        this.milliseconds_timer = milliseconds_timer;
+    }
 
     public void orderStatistics(){
         fileInfos.sort(FileInfo.getCompByRequests());
@@ -93,7 +105,6 @@ public class DataNodeStatistic implements Serializable {
         return null;
 
     }
-
 
     public static Comparator<DataNodeStatistic> getCrescentCompBySize()
     {
@@ -138,8 +149,8 @@ public class DataNodeStatistic implements Serializable {
 
     @Override
     public String toString() {
-        return "Server Port " + dataNodePort + " Server Size "+serverSize +" Server Requests "+serverRequests
-                +" " +fileInfos;
+        return "Server Port: " + dataNodePort + " - Server Size: "+serverSize +" - Server Requests: "+serverRequests
+                +" - Files: " +fileInfos;
     }
 
     public void resetRequest() {

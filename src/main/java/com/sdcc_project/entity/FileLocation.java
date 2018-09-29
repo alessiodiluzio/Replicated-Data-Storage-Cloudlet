@@ -14,8 +14,8 @@ public class FileLocation implements Serializable {
         return filePositions;
     }
 
-    public void setFilePositions(ArrayList<String> chunkPositions) {
-        this.filePositions = chunkPositions;
+    public void setFilePositions(ArrayList<String> filePositions) {
+        this.filePositions = filePositions;
     }
 
     public boolean isResult() {

@@ -1,16 +1,13 @@
 package com.sdcc_project.service_interface;
 
-
-
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
 
 import com.sdcc_project.entity.DataNodeStatistic;
 import com.sdcc_project.entity.FileLocation;
 import com.sdcc_project.exception.FileNotFoundException;
 import com.sdcc_project.exception.MasterException;
-
-import java.rmi.Remote;
-import java.rmi.RemoteException;
-import java.util.ArrayList;
 
 public interface MasterInterface extends Remote {
 
