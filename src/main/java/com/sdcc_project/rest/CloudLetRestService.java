@@ -49,7 +49,7 @@ public class CloudLetRestService {
         } catch (FileNotFoundException e) {
             return new ResponseEntity<>(record,HttpStatus.NOT_FOUND);
         }
-        record = new Record(record.getRecordID(),result);
+        record = new Record(recordID,result);
         return new ResponseEntity<>(record,HttpStatus.OK);
     }
 

@@ -1,7 +1,7 @@
 package com.sdcc_project.config;
 
 public class GlobalInformation {
-    private  String cloudLetAddress;
+
     private  String masterAddress;
     private  String host;
     private static GlobalInformation instance;
@@ -16,13 +16,6 @@ public class GlobalInformation {
         return instance;
     }
 
-    public  String getCloudLetAddress() {
-        return cloudLetAddress;
-    }
-
-    public void setCloudLetAddress(String cloudLetAddress) {
-        this.cloudLetAddress = cloudLetAddress;
-    }
 
     public  String getMasterAddress() {
         return masterAddress;

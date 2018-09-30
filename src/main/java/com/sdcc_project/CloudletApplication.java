@@ -9,13 +9,11 @@ import com.sdcc_project.exception.CloudLetException;
 import com.sdcc_project.exception.DataNodeException;
 import com.sdcc_project.exception.FileNotFoundException;
 import com.sdcc_project.exception.MasterException;
-import com.sdcc_project.service_interface.CloudLetService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.IOException;
 import java.rmi.NotBoundException;
-import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +21,7 @@ import java.util.Map;
 import static java.rmi.registry.LocateRegistry.createRegistry;
 
 @SpringBootApplication
-public class CloudletApplication implements CloudLetService {
+public class CloudletApplication  {
 
 
     private static final int N_OF_UPDATES_SYSTEM = 20;
@@ -49,25 +47,25 @@ public class CloudletApplication implements CloudLetService {
         // Controllo argomento host
         try {
 
-            if (args.length != 2) {
-                System.out.println("Usage: CloudLet <hostname> <cloudLetPort>");
+            if (args.length != 1) {
+                System.out.println("Usage: CloudLet <hostname> ");
                 System.exit(1);
             }
-            int CLOUDLET_PORT = Integer.parseInt(args[1]);
+
             GlobalInformation globalInformation =  GlobalInformation.getInstance();
 
             String registryHost = args[0];
 
             globalInformation.setMasterAddress(Integer.toString(REGISTRYPORT));
             globalInformation.setHost(registryHost);
-            globalInformation.setCloudLetAddress(Integer.toString(CLOUDLET_PORT));
+            //globalInformation.setCloudLetAddress(Integer.toString(CLOUDLET_PORT));
 
-            Registry cloudLetRegistry = createRegistry(CLOUDLET_PORT);
-            String completeName = "//" + registryHost + ":" + CLOUDLET_PORT + "/" + Config.cloudLetServiceName;
-            CloudletApplication cloudLet = new CloudletApplication();
-            cloudLetRegistry.rebind(completeName, cloudLet);
+            //Registry cloudLetRegistry = createRegistry(CLOUDLET_PORT);
+            //String completeName = "//" + registryHost + ":" + CLOUDLET_PORT + "/" + Config.cloudLetServiceName;
+            //CloudletApplication cloudLet = new CloudletApplication();
+            //cloudLetRegistry.rebind(completeName, cloudLet);
 
-            System.out.println("CloudLet bind " + CLOUDLET_PORT);
+            //System.out.println("CloudLet bind " + CLOUDLET_PORT);
 
             asynchWrite.start();
             asynchRead.start();
@@ -150,16 +148,4 @@ public class CloudletApplication implements CloudLetService {
 
     }
 
-
-
-    @Override
-    public void publishUpdate(String filename, String data, int version){
-        try {
-            cloudLetDAO.insertFileToReadCache(filename,data,version);
-        } catch (CloudLetException e) {
-            e.printStackTrace();
-            System.err.println(e.getMessage());
-        }
-
-    }
 }
