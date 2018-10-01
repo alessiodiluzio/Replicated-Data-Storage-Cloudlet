@@ -207,7 +207,7 @@ public class CloudLetDAO {
                 +"cloudlet"+";password="+"cloudlet";
         DataSource dataSource = DataSource.getInstance();
         try {
-            this.connection = dataSource.getConnection(dbUri,1100);
+            this.connection = dataSource.getConnection(dbUri,1200);
         } catch (Exception e) {
             e.printStackTrace();
         }

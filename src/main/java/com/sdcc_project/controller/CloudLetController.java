@@ -90,14 +90,14 @@ public class CloudLetController {
                 Path path = Paths.get(fileName);
                 Files.delete(path);
                 cloudLetDAO.insertFileToReadCache(fileName, output.toString(), fileLocation.getFileVersion());
+                System.out.println("Testo "+output.toString());
                 return output.toString();
             }
             else throw new FileNotFoundException("File not found");
-        }
+        }else throw new FileNotFoundException("File not found");
 
 
         // Cerca l'oggetto remoto per nome nel registro dell'host del server
-        return null;
     }
 
     /**

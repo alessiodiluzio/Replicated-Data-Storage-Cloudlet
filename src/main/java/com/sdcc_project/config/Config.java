@@ -4,7 +4,7 @@ public class Config {
 
     // Master:
     public static final String masterServiceName = "MasterService";
-    public static final int masterRegistryPort = 1099;
+    public static final int masterRegistryPort = 1119;
     public static final String registryHost = "localhost";
     // Per creare un DataNode:
     public static final String MAC_CREATE_DATANODE = "mvn exec:java@DataNode -Dexec.args=";

@@ -1,11 +1,11 @@
 package com.sdcc_project.service_interface;
 
+import com.sdcc_project.exception.DataNodeException;
+import com.sdcc_project.exception.FileNotFoundException;
+
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-
-import com.sdcc_project.exception.DataNodeException;
-import com.sdcc_project.exception.FileNotFoundException;
 
 public interface StorageInterface extends Remote {
 
