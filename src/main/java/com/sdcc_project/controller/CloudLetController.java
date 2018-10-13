@@ -19,6 +19,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.rmi.NotBoundException;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
@@ -47,7 +49,7 @@ public class CloudLetController {
         cloudLetDAO.insertFile(record.getRecordID(),record.getRecordData());
     }
 
-    public String readFromCache(String filename) throws CloudLetException, DataNodeException, FileNotFoundException, NotBoundException, IOException {
+    public String readFromCache(String filename) throws CloudLetException, DataNodeException, FileNotFoundException, IOException {
         try{
             return cloudLetDAO.readFile(filename);
         } catch (FileNotFoundException e) {
@@ -60,44 +62,44 @@ public class CloudLetController {
      * Operazione di lettura di un file.
      * @param fileName nome del file da leggere.
      */
-    public String read(String fileName) throws CloudLetException, FileNotFoundException, IOException, DataNodeException, NotBoundException {
+    public String read(String fileName) throws CloudLetException, FileNotFoundException, IOException, DataNodeException {
         FileLocation fileLocation = getFileLocation(fileName, "R");
         if (fileLocation != null) {
             if (fileLocation.isResult()) {
+                try {
+                    String dataNodeAddress = fileLocation.getFilePositions().get(0);
+                    StorageInterface dataNode = (StorageInterface) registryLookup(dataNodeAddress, Config.dataNodeServiceName);
 
-                String dataNodePort = fileLocation.getFilePositions().get(0);
-                String serviceName = Config.dataNodeServiceName;
-                String completeName = "//" + globalInformation.getHost() + ":" + dataNodePort + "/" + serviceName;
-                Registry masterRegistry = LocateRegistry.getRegistry(globalInformation.getHost(), Integer.parseInt(dataNodePort));
-                StorageInterface dataNode = (StorageInterface) masterRegistry.lookup(completeName);
-                //Il DataNode restituisce un array di byte
-                byte[] fileBytes = dataNode.read(fileName);
-                //L'array di byte è ricostruito in un file
-                FileOutputStream fos = new FileOutputStream(fileName);
-                fos.write(fileBytes);
-                fos.close();
-                BufferedReader br = new BufferedReader(new FileReader(fileName));
+                    //Il DataNode restituisce un array di byte
+                    byte[] fileBytes = dataNode.read(fileName);
+                    //L'array di byte è ricostruito in un file
+                    FileOutputStream fos = new FileOutputStream(fileName);
+                    fos.write(fileBytes);
+                    fos.close();
+                    BufferedReader br = new BufferedReader(new FileReader(fileName));
 
-                //Stampo a schermo il contenuto del file
-                String str;
-                StringBuilder output = new StringBuilder();
-                while ((str = br.readLine()) != null) {
-                    output.append(str).append("\n");
+                    //Stampo a schermo il contenuto del file
+                    String str;
+                    StringBuilder output = new StringBuilder();
+                    while ((str = br.readLine()) != null) {
+                        output.append(str).append("\n");
+                    }
+                    System.out.println(output.toString());
+                    br.close();
+                    //Cancello il file temporaneo
+                    Path path = Paths.get(fileName);
+                    Files.delete(path);
+                    cloudLetDAO.insertFileToReadCache(fileName, output.toString(), fileLocation.getFileVersion());
+                    System.out.println("Testo " + output.toString());
+                    return output.toString();
+                } catch (NotBoundException e) {
+                    e.printStackTrace();
+                    System.out.println("ERROR IMPOSSIBLE TO CONTACT MASTER");
+                    throw new CloudLetException("ERROR 500 INTERNAL SERVER ERROR");
                 }
-                System.out.println(output.toString());
-                br.close();
-                //Cancello il file temporaneo
-                Path path = Paths.get(fileName);
-                Files.delete(path);
-                cloudLetDAO.insertFileToReadCache(fileName, output.toString(), fileLocation.getFileVersion());
-                System.out.println("Testo "+output.toString());
-                return output.toString();
             }
             else throw new FileNotFoundException("File not found");
         }else throw new FileNotFoundException("File not found");
-
-
-        // Cerca l'oggetto remoto per nome nel registro dell'host del server
     }
 
     /**
@@ -110,25 +112,23 @@ public class CloudLetController {
      */
     public FileLocation getFileLocation(String fileName, String operation){
 
-        final int REGISTRYPORT = Config.masterRegistryPort;
-        String serviceName = Config.masterServiceName;
-        String completeName = "//" + globalInformation.getHost() + ":" + REGISTRYPORT + "/" + serviceName;
+
+
         try {
-            System.out.println(completeName);
-            //System.setSecurityManager(new RMISecurityManager());
-            Registry masterRegistry = LocateRegistry.getRegistry(globalInformation.getHost(),Config.masterRegistryPort);
-            System.out.println(globalInformation.getHost() + " "+REGISTRYPORT);
-            MasterInterface master = (MasterInterface) masterRegistry.lookup(completeName);
+            MasterInterface master = (MasterInterface) registryLookup(globalInformation.getMasterAddress(),Config.masterServiceName);
             //System.out.println("Get File Location - Result: " + fileLocation.isResult() + " - Port: "+ fileLocation.getFilePositions());
             return master.checkFile(fileName,operation);
         }
-        catch (NotBoundException | IOException e) {
+        catch (IOException e) {
             e.printStackTrace();
         } catch (MasterException e) {
 
             System.out.println("ERROR 500 INTERNAL SERVER ERROR");
         } catch (FileNotFoundException e) {
             System.out.println("ERROR 404 FILE NOT FOUND ERROR");
+        } catch (NotBoundException e) {
+            e.printStackTrace();
+            System.out.println("ERROR IMPOSSIBLE TO CONTACT MASTER");
         }
         return  null;
     }
@@ -144,24 +144,24 @@ public class CloudLetController {
         FileLocation fileLocation = getFileLocation(fileName, "W");
         if (fileLocation != null) {
             if (fileLocation.isResult()) {
-                ArrayList<String> dataNodePort = fileLocation.getFilePositions();
-                String serviceName = Config.dataNodeServiceName;
-                String primaryReplica = dataNodePort.get(0);
-                String completeName = "//" + globalInformation.getHost() + ":" +primaryReplica + "/" + serviceName;
+                ArrayList<String> dataNodeAddresses = fileLocation.getFilePositions();
+                String primaryReplica = dataNodeAddresses.get(0);
                 System.out.println("Write "+fileName+" "+data + " Port "+ primaryReplica);
                 try {
-                    Registry masterRegistry = LocateRegistry.getRegistry(globalInformation.getHost(),Integer.parseInt(primaryReplica));
-                    StorageInterface dataNode = (StorageInterface) masterRegistry.lookup(completeName);
-                    String response = dataNode.write(data,fileName,dataNodePort,fileLocation.getFileVersion(),null);
+                    StorageInterface dataNode = (StorageInterface) registryLookup(primaryReplica, Config.dataNodeServiceName);
+                    String response = dataNode.write(data,fileName,dataNodeAddresses,fileLocation.getFileVersion(),null);
                     System.out.println("Response "+ response);
                 }
-                catch (NotBoundException | IOException e) {
+                catch (IOException e) {
                     e.printStackTrace();
                 } catch (FileNotFoundException e) {
                     System.out.println("ERROR 404 FILE NOT FOUND");
                 } catch (DataNodeException e) {
                     e.printStackTrace();
                     System.out.println("ERROR 500 INTERNAL SERVER ERROR");
+                } catch (NotBoundException e) {
+                    e.printStackTrace();
+                    System.out.println("ERROR IMPOSSIBLE TO CONTACT MASTER");
                 }
 
             }
@@ -170,5 +170,16 @@ public class CloudLetController {
     }
 
 
+    private Remote registryLookup(String registryHost, String serviceName) throws RemoteException, NotBoundException {
+
+        String completeName ="//" + registryHost + ":" + Config.port + "/" + serviceName;
+        System.out.println(completeName);
+        Registry registry = LocateRegistry.getRegistry(registryHost,Config.port);
+        return registry.lookup(completeName);
+
+    }
+
+
 
 }
+

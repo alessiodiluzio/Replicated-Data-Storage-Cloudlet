@@ -43,7 +43,7 @@ public class CloudLetRestService {
         Record record= new Record();
         try {
             result = cloudLetController.readFromCache(recordID);
-        } catch (CloudLetException | NotBoundException | IOException | DataNodeException e) {
+        } catch (CloudLetException | IOException | DataNodeException e) {
             e.printStackTrace();
             return new ResponseEntity<>(record,HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (FileNotFoundException e) {
@@ -51,6 +51,11 @@ public class CloudLetRestService {
         }
         record = new Record(recordID,result);
         return new ResponseEntity<>(record,HttpStatus.OK);
+    }
+
+    @RequestMapping(path="ciao",method = RequestMethod.GET)
+    public ResponseEntity<String> saluta(){
+        return new ResponseEntity<>("CIAO!",HttpStatus.OK);
     }
 
 

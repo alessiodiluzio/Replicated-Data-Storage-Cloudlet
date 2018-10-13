@@ -1,6 +1,4 @@
 package com.sdcc_project;
-
-import com.sdcc_project.config.Config;
 import com.sdcc_project.config.GlobalInformation;
 import com.sdcc_project.controller.CloudLetController;
 import com.sdcc_project.dao.CloudLetDAO;
@@ -13,12 +11,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.IOException;
-import java.rmi.NotBoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import static java.rmi.registry.LocateRegistry.createRegistry;
 
 @SpringBootApplication
 public class CloudletApplication  {
@@ -42,8 +38,6 @@ public class CloudletApplication  {
             System.err.println("Errore nell'avvio della cache");
             System.exit(0);
         }
-        final int REGISTRYPORT = Config.masterRegistryPort;
-
         // Controllo argomento host
         try {
 
@@ -56,16 +50,8 @@ public class CloudletApplication  {
 
             String registryHost = args[0];
 
-            globalInformation.setMasterAddress(Integer.toString(REGISTRYPORT));
+            globalInformation.setMasterAddress(registryHost);
             globalInformation.setHost(registryHost);
-            //globalInformation.setCloudLetAddress(Integer.toString(CLOUDLET_PORT));
-
-            //Registry cloudLetRegistry = createRegistry(CLOUDLET_PORT);
-            //String completeName = "//" + registryHost + ":" + CLOUDLET_PORT + "/" + Config.cloudLetServiceName;
-            //CloudletApplication cloudLet = new CloudletApplication();
-            //cloudLetRegistry.rebind(completeName, cloudLet);
-
-            //System.out.println("CloudLet bind " + CLOUDLET_PORT);
 
             asynchWrite.start();
             asynchRead.start();
@@ -104,7 +90,7 @@ public class CloudletApplication  {
                         }
                     }
                     sleep(5000);
-                } catch (MasterException | CloudLetException | InterruptedException | FileNotFoundException | IOException | DataNodeException | NotBoundException e) {
+                } catch (MasterException | CloudLetException | InterruptedException | FileNotFoundException | IOException | DataNodeException e) {
                     e.printStackTrace();
                 }
             }
