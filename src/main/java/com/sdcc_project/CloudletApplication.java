@@ -167,6 +167,7 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
                     sleep(60000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                    Util.writeOutput(e.getMessage(),file);
                 }
             }
         }

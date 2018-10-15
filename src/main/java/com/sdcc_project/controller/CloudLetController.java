@@ -12,6 +12,7 @@ import com.sdcc_project.exception.MasterException;
 import com.sdcc_project.service_interface.MasterInterface;
 import com.sdcc_project.service_interface.StorageInterface;
 import com.sdcc_project.monitor.State;
+import com.sdcc_project.util.GeoLocation;
 import com.sdcc_project.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -191,10 +192,10 @@ public class CloudLetController {
 
     }
 
-    public  double getLatency(String ipAddress) {
+    public double getLatency(String ipAddress) {
         String linuxCommandResult;
         try {
-            Process p = Runtime.getRuntime().exec("ping -c 4 "+ipAddress);
+            Process p = Runtime.getRuntime().exec("ping -c 2 "+ipAddress);
             BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String lastLine="";
             int count=0;
@@ -211,7 +212,7 @@ public class CloudLetController {
         } catch (IOException e) {
             e.printStackTrace();
             Util.writeOutput(e.getMessage(),logFile);
-            return -1;
+            return GeoLocation.getDistance(ipAddress,Util.getPublicIPAddress());
         }
     }
 
@@ -252,8 +253,10 @@ public class CloudLetController {
             masterInterface.cloudletLifeSignal(Util.getLocalIPAddress(),state);
         } catch (RemoteException e) {
             e.printStackTrace();
+            Util.writeOutput(e.getMessage(),logFile);
         } catch (NotBoundException e) {
             e.printStackTrace();
+            Util.writeOutput(e.getMessage(),logFile);
         }
     }
 }
