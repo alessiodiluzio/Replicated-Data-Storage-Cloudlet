@@ -10,7 +10,6 @@ import com.sdcc_project.exception.FileNotFoundException;
 import com.sdcc_project.exception.MasterException;
 import com.sdcc_project.monitor.Monitor;
 import com.sdcc_project.service_interface.CloudletInterface;
-import com.sdcc_project.system_properties.State;
 import com.sdcc_project.util.Util;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -158,11 +157,11 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
         public void run() {
             while(condition){
                 if(monitor.getMemoryUsage()>=Config.ramMaxUsage || monitor.getCpuUsage()>=Config.cpuMaxUsage){
-                    globalInformation.setState(com.sdcc_project.system_properties.State.BUSY);
+                    globalInformation.setState(com.sdcc_project.monitor.State.BUSY);
                     System.out.println("MemoryUsage "+monitor.getMemoryUsage()+" CpuUsage "+monitor.getCpuUsage()+" state "+
                     globalInformation.getState().toString());
                 }
-                else globalInformation.setState(com.sdcc_project.system_properties.State.NORMAL);
+                else globalInformation.setState(com.sdcc_project.monitor.State.NORMAL);
                 cloudLetController.sendLifeSignal(globalInformation.getState());
                 try {
                     sleep(5000);

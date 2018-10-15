@@ -11,7 +11,7 @@ import com.sdcc_project.exception.FileNotFoundException;
 import com.sdcc_project.exception.MasterException;
 import com.sdcc_project.service_interface.MasterInterface;
 import com.sdcc_project.service_interface.StorageInterface;
-import com.sdcc_project.system_properties.State;
+import com.sdcc_project.monitor.State;
 import com.sdcc_project.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

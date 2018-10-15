@@ -4,7 +4,7 @@ import com.sdcc_project.entity.DataNodeStatistic;
 import com.sdcc_project.entity.FileLocation;
 import com.sdcc_project.exception.FileNotFoundException;
 import com.sdcc_project.exception.MasterException;
-import com.sdcc_project.system_properties.State;
+import com.sdcc_project.monitor.State;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

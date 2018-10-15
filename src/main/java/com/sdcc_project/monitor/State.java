@@ -1,4 +1,4 @@
-package com.sdcc_project.system_properties;
+package com.sdcc_project.monitor;
 
 public enum State {
 

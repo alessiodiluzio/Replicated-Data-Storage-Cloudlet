@@ -6,13 +6,12 @@ import com.sdcc_project.exception.DataNodeException;
 import com.sdcc_project.exception.FileNotFoundException;
 import com.sdcc_project.monitor.Monitor;
 import com.sdcc_project.system_properties.GlobalInformation;
-import com.sdcc_project.system_properties.State;
+import com.sdcc_project.monitor.State;
 import com.sdcc_project.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import sun.security.action.GetLongAction;
 
 import java.io.IOException;
 

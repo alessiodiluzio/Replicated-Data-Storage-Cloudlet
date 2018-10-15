@@ -1,10 +1,12 @@
 package com.sdcc_project.system_properties;
 
+import com.sdcc_project.monitor.State;
+
 public class GlobalInformation {
 
     private  String masterAddress;
     private  String host;
-    private  State state = State.NORMAL;
+    private State state = State.NORMAL;
     private static GlobalInformation instance;
 
 
