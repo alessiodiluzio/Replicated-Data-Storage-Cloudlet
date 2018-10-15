@@ -35,4 +35,8 @@ public class Config {
     public static final Long loadThreshold = Integer.toUnsignedLong(20);
     public static final Long dataNodeMaxRequest = Integer.toUnsignedLong(200);
     public static final Long requestThreshold = Integer.toUnsignedLong(20);
+
+
+    public static final double cpuMaxUsage = 70.0;
+    public static final double ramMaxUsage = 70.0;
 }

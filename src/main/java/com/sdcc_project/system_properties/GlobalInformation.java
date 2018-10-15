@@ -1,10 +1,12 @@
-package com.sdcc_project.config;
+package com.sdcc_project.system_properties;
 
 public class GlobalInformation {
 
     private  String masterAddress;
     private  String host;
+    private  State state = State.NORMAL;
     private static GlobalInformation instance;
+
 
     private GlobalInformation(){
 
@@ -35,5 +37,13 @@ public class GlobalInformation {
 
     public void setInstance(GlobalInformation instance) {
         GlobalInformation.instance = instance;
+    }
+
+    public State getState() {
+        return state;
+    }
+
+    public void setState(State state) {
+        this.state = state;
     }
 }

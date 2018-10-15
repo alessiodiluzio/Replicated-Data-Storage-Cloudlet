@@ -1,7 +1,7 @@
 package com.sdcc_project.controller;
 
 import com.sdcc_project.config.Config;
-import com.sdcc_project.config.GlobalInformation;
+import com.sdcc_project.system_properties.GlobalInformation;
 import com.sdcc_project.dao.CloudLetDAO;
 import com.sdcc_project.entity.FileLocation;
 import com.sdcc_project.entity.Record;
@@ -11,6 +11,8 @@ import com.sdcc_project.exception.FileNotFoundException;
 import com.sdcc_project.exception.MasterException;
 import com.sdcc_project.service_interface.MasterInterface;
 import com.sdcc_project.service_interface.StorageInterface;
+import com.sdcc_project.system_properties.State;
+import com.sdcc_project.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +33,7 @@ public class CloudLetController {
     private CloudLetDAO cloudLetDAO;
     private GlobalInformation globalInformation;
     private static CloudLetController instance ;
+    private static File logFile = new File("Logging_Cloudlet.txt");
 
     @Autowired
     private CloudLetController(CloudLetDAO cloudLetDAO) {
@@ -54,6 +57,7 @@ public class CloudLetController {
             return cloudLetDAO.readFile(filename);
         } catch (FileNotFoundException e) {
             System.out.println("File non in cache");
+            Util.writeOutput(e.getMessage(),logFile);
             return read(filename);
         }
     }
@@ -95,6 +99,7 @@ public class CloudLetController {
                 } catch (NotBoundException e) {
                     e.printStackTrace();
                     System.out.println("ERROR IMPOSSIBLE TO CONTACT MASTER");
+                    Util.writeOutput(e.getMessage(),logFile);
                     throw new CloudLetException("ERROR 500 INTERNAL SERVER ERROR");
                 }
             }
@@ -121,13 +126,16 @@ public class CloudLetController {
         }
         catch (IOException e) {
             e.printStackTrace();
+            Util.writeOutput(e.getMessage(),logFile);
         } catch (MasterException e) {
-
+            Util.writeOutput(e.getMessage(),logFile);
             System.out.println("ERROR 500 INTERNAL SERVER ERROR");
         } catch (FileNotFoundException e) {
+            Util.writeOutput(e.getMessage(),logFile);
             System.out.println("ERROR 404 FILE NOT FOUND ERROR");
         } catch (NotBoundException e) {
             e.printStackTrace();
+            Util.writeOutput(e.getMessage(),logFile);
             System.out.println("ERROR IMPOSSIBLE TO CONTACT MASTER");
         }
         return  null;
@@ -154,12 +162,16 @@ public class CloudLetController {
                 }
                 catch (IOException e) {
                     e.printStackTrace();
+                    Util.writeOutput(e.getMessage(),logFile);
                 } catch (FileNotFoundException e) {
+                    Util.writeOutput(e.getMessage(),logFile);
                     System.out.println("ERROR 404 FILE NOT FOUND");
                 } catch (DataNodeException e) {
                     e.printStackTrace();
+                    Util.writeOutput(e.getMessage(),logFile);
                     System.out.println("ERROR 500 INTERNAL SERVER ERROR");
                 } catch (NotBoundException e) {
+                    Util.writeOutput(e.getMessage(),logFile);
                     e.printStackTrace();
                     System.out.println("ERROR IMPOSSIBLE TO CONTACT MASTER");
                 }
@@ -179,7 +191,70 @@ public class CloudLetController {
 
     }
 
+    public  double getLatency(String ipAddress) {
+        String linuxCommandResult;
+        try {
+            Process p = Runtime.getRuntime().exec("ping -c 4 "+ipAddress);
+            BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String lastLine="";
+            int count=0;
+            while (count<=2){
+                linuxCommandResult = stdInput.readLine();
+                if(linuxCommandResult == null){
+                    count++;
+                }
+                else lastLine=linuxCommandResult;
+            }
+            System.out.println(lastLine);
+            String[] resultArray = lastLine.split("/");
+            return Double.parseDouble(resultArray[4]);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Util.writeOutput(e.getMessage(),logFile);
+            return -1;
+        }
+    }
+
+    public String getMinorLatencyCloudlet(String sourceIP){
+        try {
+            MasterInterface masterInterface = (MasterInterface) registryLookup(globalInformation.getMasterAddress(),Config.masterServiceName);
+            return masterInterface.getMinorLatencyCloudlet(sourceIP);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+            Util.writeOutput(e.getMessage(),logFile);
+        } catch (NotBoundException e) {
+            e.printStackTrace();
+            Util.writeOutput(e.getMessage(),logFile);
+        }
+        return null;
+
+    }
+
+    public boolean registerToMaster(){
+        boolean value = false;
+        try {
+            MasterInterface masterInterface = (MasterInterface) registryLookup(globalInformation.getMasterAddress(),Config.masterServiceName);
+            value = masterInterface.addCloudlet(Util.getLocalIPAddress());
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        } catch (NotBoundException e) {
+            e.printStackTrace();
+        }
+        return value;
 
 
+    }
+
+
+    public void sendLifeSignal(State state) {
+        try{
+            MasterInterface masterInterface = (MasterInterface) registryLookup(globalInformation.getMasterAddress(),Config.masterServiceName);
+            masterInterface.cloudletLifeSignal(Util.getLocalIPAddress(),state);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        } catch (NotBoundException e) {
+            e.printStackTrace();
+        }
+    }
 }
 
