@@ -1,8 +1,10 @@
 package com.sdcc_project.monitor;
 
 import com.sdcc_project.config.Config;
+import com.sdcc_project.util.Util;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -14,6 +16,7 @@ public class Monitor {
     private boolean running = true;
     private boolean overCpuUsage = false;
     private boolean overRamUsage = false;
+    private File file = new File("Monitor.txt");
 
     public static Monitor getInstance(){
         if(instance==null)
@@ -49,6 +52,8 @@ public class Monitor {
             while (running){
                 cpuUsage = getUsage(Components.CPU);
                 memoryUsage = getUsage(Components.RAM);
+                System.out.println("Uso Locale : CPU "+cpuUsage + " RAM " + memoryUsage);
+                Util.writeOutput("Uso Locale : CPU "+cpuUsage + " RAM " + memoryUsage,file);
                 if(cpuUsage>= Config.cpuMaxUsage)
                     cpuOverUsageTime++;
                 else {
