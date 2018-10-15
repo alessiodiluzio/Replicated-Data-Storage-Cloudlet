@@ -156,7 +156,7 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
         @Override
         public void run() {
             while(condition){
-                if(monitor.getMemoryUsage()>=Config.ramMaxUsage || monitor.getCpuUsage()>=Config.cpuMaxUsage){
+                if(monitor.isOverCpuUsage() || monitor.isOverRamUsage()){
                     globalInformation.setState(com.sdcc_project.monitor.State.BUSY);
                     System.out.println("MemoryUsage "+monitor.getMemoryUsage()+" CpuUsage "+monitor.getCpuUsage()+" state "+
                     globalInformation.getState().toString());
@@ -164,7 +164,7 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
                 else globalInformation.setState(com.sdcc_project.monitor.State.NORMAL);
                 cloudLetController.sendLifeSignal(globalInformation.getState());
                 try {
-                    sleep(5000);
+                    sleep(60000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
