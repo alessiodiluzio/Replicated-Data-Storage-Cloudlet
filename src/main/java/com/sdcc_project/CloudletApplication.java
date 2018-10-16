@@ -38,6 +38,7 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
     private static Monitor monitor;
     private static GlobalInformation globalInformation;
 
+
     protected CloudletApplication() throws RemoteException {
         super();
     }

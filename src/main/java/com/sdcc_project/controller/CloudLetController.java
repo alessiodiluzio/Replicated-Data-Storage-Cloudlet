@@ -250,7 +250,7 @@ public class CloudLetController {
     public void sendLifeSignal(State state) {
         try{
             MasterInterface masterInterface = (MasterInterface) registryLookup(globalInformation.getMasterAddress(),Config.masterServiceName);
-            masterInterface.cloudletLifeSignal(Util.getLocalIPAddress(),state);
+            masterInterface.cloudletLifeSignal(globalInformation.getPublicIPAddress(),state);
         } catch (RemoteException e) {
             e.printStackTrace();
             Util.writeOutput(e.getMessage(),logFile);
