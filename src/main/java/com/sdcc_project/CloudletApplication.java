@@ -48,6 +48,7 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
         SpringApplication.run(CloudletApplication.class, args);
         Util.writeOutput("Avviata applicazione",file);
         monitor = Monitor.getInstance();
+
         try {
             cloudLetDAO = CloudLetDAO.getInstance();
             cloudLetController = CloudLetController.getInstance(cloudLetDAO);
@@ -77,7 +78,7 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
             String completeName = "//" + Util.getLocalIPAddress() + ":" + Config.port + "/" + Config.cloudLetServiceName;
             CloudletApplication cloudletApplication  = new CloudletApplication();
             registry.rebind(completeName,cloudletApplication);
-
+            System.setProperty("java.rmi.server.hostname",Util.getPublicIPAddress());
             asynchWrite.start();
             asynchRead.start();
             lifeThread.start();
