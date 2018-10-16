@@ -208,11 +208,13 @@ public class CloudLetController {
             }
             System.out.println(lastLine);
             String[] resultArray = lastLine.split("/");
+            if(resultArray.length<5)
+                return GeoLocation.getDistance(ipAddress,Util.getPublicIPAddress());
             return Double.parseDouble(resultArray[4]);
         } catch (IOException e) {
             e.printStackTrace();
             Util.writeOutput(e.getMessage(),logFile);
-            return GeoLocation.getDistance(ipAddress,Util.getPublicIPAddress());
+            return -1;
         }
     }
 
