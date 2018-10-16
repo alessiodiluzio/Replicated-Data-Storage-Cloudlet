@@ -75,7 +75,7 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
 
             //Registro oggetto remoto
             Registry registry = LocateRegistry.createRegistry(Config.port);
-            String completeName = "//" + Util.getLocalIPAddress() + ":" + Config.port + "/" + Config.cloudLetServiceName;
+            String completeName = "//" + Util.getPublicIPAddress() + ":" + Config.port + "/" + Config.cloudLetServiceName;
             CloudletApplication cloudletApplication  = new CloudletApplication();
             registry.rebind(completeName,cloudletApplication);
             System.setProperty("java.rmi.server.hostname",Util.getPublicIPAddress());
