@@ -14,7 +14,7 @@ public class Config {
     public static final String MAC_CREATE_SHADOW_MASTER = "mvn exec:java@Master -Dexec.args=";
     public static final String WINDOWS_CREATE_SHADOW_MASTER = "cmd.exe /c mvn exec:java@Master -Dexec.args=" ;
     public static final String OTHERS_CREATE_SHADOW_MASTER = "mvn exec:java@Master -Dexec.args=" ;
-    public static final int REPLICATION_FACTORY = 3;
+    public static final int REPLICATION_FACTORY = 1;
     public static final int DATANODE_NUMBER = 4;
     public static final int dataNodeStartPort = 1400;
     public static final int BALANCING_THREAD_SLEEP_TIME = 10000;

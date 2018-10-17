@@ -3,6 +3,7 @@ package com.sdcc_project.service_interface;
 import com.sdcc_project.entity.DataNodeStatistic;
 import com.sdcc_project.entity.FileLocation;
 import com.sdcc_project.exception.FileNotFoundException;
+import com.sdcc_project.exception.ImpossibleToFindDataNodeForReplication;
 import com.sdcc_project.exception.MasterException;
 import com.sdcc_project.monitor.State;
 
@@ -13,11 +14,15 @@ import java.util.ArrayList;
 public interface MasterInterface extends Remote {
 
     FileLocation checkFile(String fileName, String operation) throws RemoteException, FileNotFoundException, MasterException;
-    void writeAck(String filename, String port, int version, String oldPort) throws RemoteException;
+    void writeAck(String filename, String dataNode_address, int version) throws RemoteException;
+    String getDataNodeAddressForReplication(String filename, int version) throws RemoteException, ImpossibleToFindDataNodeForReplication;
+    String findReplicaPosition(String filename, int version) throws RemoteException;
     void setStatistic(DataNodeStatistic dataNodeStatistic) throws RemoteException;
     void lifeSignal(String port) throws RemoteException;
     ArrayList<String> getDataNodeAddresses() throws RemoteException;
-    void dataNodeToManage(ArrayList<String> addresses) throws RemoteException;
+    ArrayList<String> getMasterAddresses() throws RemoteException;
+    void dataNodesToManage_AND_listOfMasters(ArrayList<String> dataNode_addresses, ArrayList<String> master_addresses) throws RemoteException;
+    void updateMasterAddresses(String newMasterAddress, String oldMasterAddress) throws RemoteException;
     String getMinorLatencyCloudlet(String sourceIP) throws RemoteException;
     ArrayList<String> getMinorLatencyLocalCloudlet(String sourceIP) throws RemoteException;
     boolean addCloudlet(String ipAddress) throws RemoteException;

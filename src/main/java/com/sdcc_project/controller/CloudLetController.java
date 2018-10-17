@@ -158,7 +158,7 @@ public class CloudLetController {
                 System.out.println("Write "+fileName+" "+data + " Port "+ primaryReplica);
                 try {
                     StorageInterface dataNode = (StorageInterface) registryLookup(primaryReplica, Config.dataNodeServiceName);
-                    boolean response =  dataNode.write(data,fileName,fileLocation.getFileVersion(),Config.REPLICATION_FACTORY);
+                    boolean response =  dataNode.write(fileName,data,fileLocation.getFileVersion(),Config.REPLICATION_FACTORY);
                     System.out.println("Response "+ response);
                 }
                 catch (IOException e) {
