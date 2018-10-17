@@ -158,15 +158,12 @@ public class CloudLetController {
                 System.out.println("Write "+fileName+" "+data + " Port "+ primaryReplica);
                 try {
                     StorageInterface dataNode = (StorageInterface) registryLookup(primaryReplica, Config.dataNodeServiceName);
-                    String response = dataNode.write(data,fileName,dataNodeAddresses,fileLocation.getFileVersion(),null);
+                    boolean response =  dataNode.write(data,fileName,fileLocation.getFileVersion(),Config.REPLICATION_FACTORY);
                     System.out.println("Response "+ response);
                 }
                 catch (IOException e) {
                     e.printStackTrace();
                     Util.writeOutput(e.getMessage(),logFile);
-                } catch (FileNotFoundException e) {
-                    Util.writeOutput(e.getMessage(),logFile);
-                    System.out.println("ERROR 404 FILE NOT FOUND");
                 } catch (DataNodeException e) {
                     e.printStackTrace();
                     Util.writeOutput(e.getMessage(),logFile);
