@@ -50,21 +50,21 @@ public class CloudLetRestService {
     }
 
     @RequestMapping(path="{recordID}",method = RequestMethod.GET)
-    public ResponseEntity<Record> getRecord(@PathVariable String recordID){
+    public ResponseEntity<String> getRecord(@PathVariable String recordID){
         String result;
         Record record= new Record();
         if(!reply())
-            return new ResponseEntity<>(record,HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("",HttpStatus.INTERNAL_SERVER_ERROR);
         try {
             result = cloudLetController.readFromCache(recordID);
         } catch (CloudLetException | IOException | DataNodeException e) {
             e.printStackTrace();
-            return new ResponseEntity<>(record,HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("",HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (FileNotFoundException e) {
-            return new ResponseEntity<>(record,HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("",HttpStatus.NOT_FOUND);
         }
         record = new Record(recordID,result);
-        return new ResponseEntity<>(record,HttpStatus.OK);
+        return new ResponseEntity<>(result,HttpStatus.OK);
     }
 
     @RequestMapping(path="ciao",method = RequestMethod.GET)
