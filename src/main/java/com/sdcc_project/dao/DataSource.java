@@ -1,13 +1,9 @@
 package com.sdcc_project.dao;
 
-import org.apache.derby.drda.NetworkServerControl;
-
-import java.io.PrintWriter;
-import java.net.InetAddress;
 import java.sql.Connection;
 import java.sql.DriverManager;
 
-public class DataSource {
+class DataSource {
 
     private static DataSource instance;
 
@@ -16,7 +12,7 @@ public class DataSource {
 
     }
 
-    public static DataSource getInstance(){
+    static DataSource getInstance(){
         if(instance==null)
             instance = new DataSource();
         return instance;
@@ -29,9 +25,8 @@ public class DataSource {
      * @return la connessione al db.
      * @throws Exception eccezione in caso di problemi alla connessione al database
      */
-    public Connection getConnection(String dbURI) throws Exception {
+    Connection getConnection(String dbURI) throws Exception {
         Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
-        Connection connection = DriverManager.getConnection(dbURI);
-        return connection;
+        return DriverManager.getConnection(dbURI);
     }
 }

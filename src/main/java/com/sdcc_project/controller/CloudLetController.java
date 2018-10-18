@@ -219,10 +219,7 @@ public class CloudLetController {
         try {
             MasterInterface masterInterface = (MasterInterface) registryLookup(globalInformation.getMasterAddress(),Config.masterServiceName);
             return masterInterface.getMinorLatencyCloudlet(sourceIP);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-            Util.writeOutput(e.getMessage(),logFile);
-        } catch (NotBoundException e) {
+        } catch (RemoteException | NotBoundException e) {
             e.printStackTrace();
             Util.writeOutput(e.getMessage(),logFile);
         }
@@ -235,9 +232,7 @@ public class CloudLetController {
         try {
             MasterInterface masterInterface = (MasterInterface) registryLookup(globalInformation.getMasterAddress(),Config.masterServiceName);
             value = masterInterface.addCloudlet(Util.getLocalIPAddress());
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        } catch (NotBoundException e) {
+        } catch (RemoteException | NotBoundException e) {
             e.printStackTrace();
         }
         return value;
