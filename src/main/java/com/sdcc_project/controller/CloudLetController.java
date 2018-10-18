@@ -123,14 +123,11 @@ public class CloudLetController {
         try {
             MasterInterface master = (MasterInterface) registryLookup(globalInformation.getMasterAddress(),Config.masterServiceName);
             //System.out.println("Get File Location - Result: " + fileLocation.isResult() + " - Port: "+ fileLocation.getFilePositions());
-            return master.checkFile(fileName,operation);
+            return master.getMostUpdatedFileLocation(fileName,operation);
         }
         catch (IOException e) {
             e.printStackTrace();
             Util.writeOutput(e.getMessage(),logFile);
-        } catch (MasterException e) {
-            Util.writeOutput(e.getMessage(),logFile);
-            System.out.println("ERROR 500 INTERNAL SERVER ERROR");
         } catch (FileNotFoundException e) {
             Util.writeOutput(e.getMessage(),logFile);
             System.out.println("ERROR 404 FILE NOT FOUND ERROR");
