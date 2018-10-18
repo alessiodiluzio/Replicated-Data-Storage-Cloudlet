@@ -7,7 +7,7 @@ public class Config {
     public static final int port = 1099;
 
 
-    public static final int REPLICATION_FACTORY = 1;
+    public static final int REPLICATION_FACTORY = 3;
     public static final String dataNodeServiceName = "StorageService";
 
     //CloudLet
