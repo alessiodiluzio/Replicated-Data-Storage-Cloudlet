@@ -166,7 +166,7 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
                 else globalInformation.setState(com.sdcc_project.monitor.State.NORMAL);
                 cloudLetController.sendLifeSignal(globalInformation.getState());
                 try {
-                    sleep(60000);
+                    sleep(7000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                     Util.writeOutput(e.getMessage(),file);
