@@ -14,6 +14,7 @@ import com.sdcc_project.service_interface.StorageInterface;
 import com.sdcc_project.monitor.State;
 import com.sdcc_project.util.GeoLocation;
 import com.sdcc_project.util.Util;
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -70,7 +71,9 @@ public class CloudLetController {
     public String read(String fileName) throws CloudLetException, FileNotFoundException, IOException, DataNodeException {
         FileLocation fileLocation = getFileLocation(fileName, "R");
         if (fileLocation != null) {
+            System.out.println("File location non vuota");
             if (fileLocation.isResult()) {
+                System.out.println("File Trovato");
                 try {
                     String dataNodeAddress = fileLocation.getFilePositions().get(0);
                     StorageInterface dataNode = (StorageInterface) registryLookup(dataNodeAddress, Config.dataNodeServiceName);
@@ -104,8 +107,15 @@ public class CloudLetController {
                     throw new CloudLetException("ERROR 500 INTERNAL SERVER ERROR");
                 }
             }
-            else throw new FileNotFoundException("File not found");
-        }else throw new FileNotFoundException("File not found");
+            else {
+                System.out.println("File location Result False");
+                throw new FileNotFoundException("File not found");
+
+            }
+        }else {
+            System.out.println("File location nulla");
+            throw new FileNotFoundException("File not found");
+        }
     }
 
     /**
