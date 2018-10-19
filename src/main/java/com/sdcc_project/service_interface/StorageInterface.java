@@ -22,5 +22,5 @@ public interface StorageInterface extends Remote {
     boolean isEmpty() throws RemoteException;
     void terminate() throws RemoteException;
     String getInstanceID() throws RemoteException;
-    boolean delete(String filename);
+    boolean delete(String filename) throws RemoteException;
 }
