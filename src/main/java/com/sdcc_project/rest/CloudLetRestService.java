@@ -90,6 +90,16 @@ public class CloudLetRestService {
         return new ResponseEntity<>(value,HttpStatus.OK);
     }
 
+    @RequestMapping(path="/{recordID}",method = RequestMethod.DELETE)
+    public ResponseEntity<Boolean> delete(@PathVariable String recordID){
+        if(cloudLetController.delete(recordID)){
+            return new ResponseEntity<>(true,HttpStatus.OK);
+        }
+        return new ResponseEntity<>(false,HttpStatus.NOT_FOUND);
+
+    }
+
+
     private boolean reply(){
         if(globalInformation.getState().equals(State.NORMAL))
             return true;

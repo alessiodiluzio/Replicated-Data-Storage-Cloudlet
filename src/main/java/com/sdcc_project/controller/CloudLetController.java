@@ -252,13 +252,24 @@ public class CloudLetController {
         try{
             MasterInterface masterInterface = (MasterInterface) registryLookup(globalInformation.getMasterAddress(),Config.masterServiceName);
             masterInterface.cloudletLifeSignal(globalInformation.getPublicIPAddress(),state);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-            Util.writeOutput(e.getMessage(),logFile);
-        } catch (NotBoundException e) {
+        } catch (RemoteException | NotBoundException e) {
             e.printStackTrace();
             Util.writeOutput(e.getMessage(),logFile);
         }
+    }
+
+    public boolean delete(String recordID) {
+        try {
+            cloudLetDAO.deleteFileFromCache(recordID,1);
+            cloudLetDAO.deleteFileFromCache(recordID,0);
+            MasterInterface masterInterface = (MasterInterface) registryLookup(globalInformation.getMasterAddress(),Config.masterServiceName);
+            return masterInterface.delete(recordID);
+        } catch (CloudLetException | RemoteException | NotBoundException e) {
+            e.printStackTrace();
+        }
+        return false;
+
+
     }
 }
 
