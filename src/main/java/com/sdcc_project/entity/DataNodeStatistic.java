@@ -185,20 +185,5 @@ public class DataNodeStatistic implements Serializable {
         return "Server Address: " + dataNodeAddress + " - Server Size: "+serverSize +" - Server Requests: "+serverRequests
                 +" - Files: " +fileInfos;
     }
-
-    /*
-
-    public void resetRequest() {
-        ArrayList<FileInfo> tmp = new ArrayList<>(fileInfos);
-        for(FileInfo fileInfo : tmp){
-            fileInfos.remove(fileInfo);
-            filePerRequest.remove(fileInfo);
-            filePerRequest.remove(fileInfo);
-            fileInfo.setFileRequests(0L);
-            fileInfos.add(fileInfo);
-            filePerRequest.add(fileInfo);
-            filePerRequest.add(fileInfo);
-        }
-        serverRequests = 0L;
-    }*/
+    
 }

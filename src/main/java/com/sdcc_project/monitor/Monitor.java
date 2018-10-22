@@ -83,6 +83,11 @@ public class Monitor {
         monitorThread.start();
     }
 
+    /**
+     * Esegue uno script BASH che calcola percentuale utilizzo di una risorsa HW
+     * @param component CPU o RAM
+     * @return percentuale di utilizzo
+     */
     private double getUsage(Components component){
         String command ;
         if(component.equals(Components.CPU))

@@ -19,7 +19,6 @@ public class CloudLetDAO {
 
     @Autowired
     private CloudLetDAO() throws CloudLetException {
-        System.out.println("Creo cloudlet dao");
         loadDB();
         instance = this;
     }
