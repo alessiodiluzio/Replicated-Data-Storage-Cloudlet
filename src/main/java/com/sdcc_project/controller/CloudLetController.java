@@ -86,9 +86,7 @@ public class CloudLetController {
     public String read(String fileName) throws CloudLetException, FileNotFoundException, IOException, DataNodeException {
         FileLocation fileLocation = getFileLocation(fileName, "R");
         if (fileLocation != null) {
-            System.out.println("File location non vuota");
             if (fileLocation.isResult()) {
-                System.out.println("File Trovato");
                 try {
                     String dataNodeAddress = fileLocation.getFilePositions().get(0);
                     StorageInterface dataNode = (StorageInterface) registryLookup(dataNodeAddress, Config.dataNodeServiceName);
@@ -113,7 +111,6 @@ public class CloudLetController {
                     Path path = Paths.get(fileName);
                     Files.delete(path);
                     cloudLetDAO.insertFileToReadCache(fileName, output.toString(), fileLocation.getFileVersion());
-                    System.out.println("Testo " + output.toString());
                     return output.toString();
                 } catch (NotBoundException e) {
                     e.printStackTrace();
@@ -177,11 +174,9 @@ public class CloudLetController {
             if (fileLocation.isResult()) {
                 ArrayList<String> dataNodeAddresses = fileLocation.getFilePositions();
                 String primaryReplica = dataNodeAddresses.get(0);
-                System.out.println("Write "+fileName+" "+data + " Port "+ primaryReplica);
                 try {
                     StorageInterface dataNode = (StorageInterface) registryLookup(primaryReplica, Config.dataNodeServiceName);
-                    boolean response =  dataNode.write(fileName,data,fileLocation.getFileVersion(),globalInformation.getReplicationFactory());
-                    System.out.println("Response "+ response);
+                    dataNode.write(fileName,data,fileLocation.getFileVersion(),globalInformation.getReplicationFactory());
                 }
                 catch (IOException e) {
                     e.printStackTrace();
@@ -214,7 +209,6 @@ public class CloudLetController {
     private Remote registryLookup(String registryHost, String serviceName) throws RemoteException, NotBoundException {
 
         String completeName ="//" + registryHost + ":" + Config.port + "/" + serviceName;
-        System.out.println(completeName);
         Registry registry = LocateRegistry.getRegistry(registryHost,Config.port);
         return registry.lookup(completeName);
 
@@ -241,7 +235,6 @@ public class CloudLetController {
                 }
                 else lastLine=linuxCommandResult;
             }
-            System.out.println(lastLine);
             String[] resultArray = lastLine.split("/");
             //Se c'è stato un errore allora l'host non è raggiungibile (nascosta da NAT...) calcolo la distanza con
             // la geolocalizzazione

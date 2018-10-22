@@ -79,7 +79,6 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
 
             globalInformation.setMasterAddress(registryHost);
             globalInformation.setReplicationFactory(Integer.parseInt(args[1]));
-            System.out.println("INFO " + globalInformation.getMasterAddress()+ " "+globalInformation.getReplicationFactory());
             //Registro oggetto remoto
             registry = LocateRegistry.createRegistry(Config.port);
             completeName = "//" + Util.getPublicIPAddress() + ":" + Config.port + "/" + Config.cloudLetServiceName;
@@ -112,7 +111,6 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
                             cloudLetController.delete(subscription.getKey());
                         }
                         else if(location.getFileVersion()>subscription.getValue()){
-                            System.out.println("PULL DELL AGGIORNAMENTO DI "+subscription.getKey());
                             cloudLetController.read(subscription.getKey());
                         }
                     }
@@ -138,7 +136,6 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
                     //Se il master ha richiesto lo spegnimento della cloudlet e la cache di scrittura è vuota la cloudlet
                     // di essere pronta per la cancellazione
                     if(fileToWrite.isEmpty() && globalInformation.getState().equals(com.sdcc_project.monitor.State.DELETING)){
-                        System.out.println("SEQUENZA DI SPEGNIMENTO");
                         Util.writeOutput("SEQUENZA DI SPEGNIMENTO",file);
                         cloudLetController.sendShutdownSignal();
                         terminate();
@@ -147,7 +144,6 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
                     for(String file : fileToWrite){
                         ArrayList<String> data = cloudLetDAO.getFileData(file);
                         String writeData = concatenateArrayOfString(data);
-                        System.out.println("PUSH DELL AGGIORNAMENTO DI "+file + " "+writeData);
                         cloudLetController.writeToMaster(file,writeData);
                         cloudLetDAO.deleteFileFromCache(file,0);
                     }
@@ -182,7 +178,6 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
                 }
                 else if(monitor.isUnderUsage()){
                     globalInformation.setState(com.sdcc_project.monitor.State.FREE);
-                    System.out.println("SONO FREE");
                 }
                 else globalInformation.setState(com.sdcc_project.monitor.State.NORMAL);
                 cloudLetController.sendLifeSignal(globalInformation.getState());
@@ -231,6 +226,9 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
     }
 
 
+    /**
+     * Termina il processo cloudlet
+     */
     public static void terminate() {
         try {
             registry.unbind(completeName);
