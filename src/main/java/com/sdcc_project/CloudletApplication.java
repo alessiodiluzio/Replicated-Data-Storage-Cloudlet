@@ -17,6 +17,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.File;
 import java.io.IOException;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -39,6 +40,8 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
     private static CloudLetController cloudLetController;
     private static Monitor monitor;
     private static GlobalInformation globalInformation;
+    private static Registry registry;
+    private static String completeName;
 
 
     protected CloudletApplication() throws RemoteException {
@@ -77,8 +80,8 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
             globalInformation.setReplicationFactory(Integer.parseInt(args[1]));
             System.out.println("INFO " + globalInformation.getMasterAddress()+ " "+globalInformation.getReplicationFactory());
             //Registro oggetto remoto
-            Registry registry = LocateRegistry.createRegistry(Config.port);
-            String completeName = "//" + Util.getPublicIPAddress() + ":" + Config.port + "/" + Config.cloudLetServiceName;
+            registry = LocateRegistry.createRegistry(Config.port);
+            completeName = "//" + Util.getPublicIPAddress() + ":" + Config.port + "/" + Config.cloudLetServiceName;
             CloudletApplication cloudletApplication  = new CloudletApplication();
             registry.rebind(completeName,cloudletApplication);
             System.setProperty("java.rmi.server.hostname", Objects.requireNonNull(Util.getPublicIPAddress()));
@@ -137,6 +140,7 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
                         System.out.println("SEQUENZA DI SPEGNIMENTO");
                         Util.writeOutput("SEQUENZA DI SPEGNIMENTO",file);
                         cloudLetController.sendShutdownSignal();
+                        System.exit(1);
                     }
                     for(String file : fileToWrite){
                         ArrayList<String> data = cloudLetDAO.getFileData(file);
@@ -222,5 +226,18 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
     public void shutdownSignal()  {
         Util.writeOutput("DELETE SIGNAL ",file);
         globalInformation.setState(State.DELETING);
+    }
+
+
+    public void terminate() {
+        try {
+            registry.unbind(completeName);
+            UnicastRemoteObject.unexportObject(this, true);
+        }
+        catch (RemoteException | NotBoundException e) {
+            Util.writeOutput(e.getMessage(),file);
+        }
+        Util.writeOutput("Termination...",file);
+        System.exit(0);
     }
 }

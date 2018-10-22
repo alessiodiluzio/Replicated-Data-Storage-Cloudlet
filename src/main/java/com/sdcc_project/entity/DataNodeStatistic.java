@@ -185,5 +185,5 @@ public class DataNodeStatistic implements Serializable {
         return "Server Address: " + dataNodeAddress + " - Server Size: "+serverSize +" - Server Requests: "+serverRequests
                 +" - Files: " +fileInfos;
     }
-    
+
 }

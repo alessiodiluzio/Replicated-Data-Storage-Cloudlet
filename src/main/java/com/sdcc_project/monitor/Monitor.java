@@ -46,8 +46,7 @@ public class Monitor {
                 while (running) {
                     cpuUsage = getUsage(Components.CPU);
                     memoryUsage = getUsage(Components.RAM);
-                    System.out.println("Uso Locale : CPU " + cpuUsage + " RAM " + memoryUsage);
-                    Util.writeOutput("Uso Locale : CPU " + cpuUsage + " RAM " + memoryUsage, file);
+
                     if (cpuUsage >= systemProperties.getCpuMaxUsage())
                         cpuOverUsageTime++;
                     else {
@@ -62,16 +61,25 @@ public class Monitor {
                     }
                     if (cpuUsage <= systemProperties.getCpuMinUsage()) {
                         cpuUnderUsageTime++;
-                    } else cpuUnderUsageTime = 0;
+                    } else {
+                        cpuUnderUsageTime = 0;
+                        underUsage = false;
+                    }
                     if (memoryUsage <= systemProperties.getRamMinUsage()) {
                         ramUnderUsageTime++;
-                    } else ramUnderUsageTime = 0;
+                    } else {
+                        ramUnderUsageTime = 0;
+                        underUsage = false;
+                    }
                     if (cpuOverUsageTime >= 8)
                         overCpuUsage = true;
                     if (ramOverUsageTime >= 8)
                         overRamUsage = true;
-                    if (cpuUnderUsageTime >= 20 && ramUnderUsageTime >= 20)
+                    if (cpuUnderUsageTime >= 20 && ramUnderUsageTime >= 20) {
                         underUsage = true;
+                    }
+                    System.out.println("Uso Locale : CPU " + cpuUsage + " RAM " + " cpuUnder "+cpuUnderUsageTime+" ramUnder "+ramUnderUsageTime+ " under "+underUsage);
+                    Util.writeOutput("Uso Locale : CPU " + cpuUsage + " RAM " + " cpuUnder "+cpuUnderUsageTime+" ramUnder "+ramUnderUsageTime+ " under "+underUsage, file);
                     try {
                         sleep(15000);
                     } catch (InterruptedException e) {

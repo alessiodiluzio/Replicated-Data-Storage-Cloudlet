@@ -335,12 +335,6 @@ public class CloudLetController {
             masterInterface.shutdownCloudletSignal(globalInformation.getPublicIPAddress());
         } catch (RemoteException | NotBoundException e) {
             e.printStackTrace();
-        }finally {
-            try {
-                Runtime.getRuntime().exec(" sudo shutdown 1");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
 
     }
