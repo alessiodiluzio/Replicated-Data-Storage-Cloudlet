@@ -1,5 +1,6 @@
 package com.sdcc_project;
 import com.sdcc_project.config.Config;
+import com.sdcc_project.monitor.State;
 import com.sdcc_project.system_properties.GlobalInformation;
 import com.sdcc_project.controller.CloudLetController;
 import com.sdcc_project.dao.CloudLetDAO;
@@ -23,6 +24,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 
 @SpringBootApplication
@@ -49,6 +51,7 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
         Util.writeOutput("Avviata applicazione",file);
         monitor = Monitor.getInstance();
 
+
         try {
             cloudLetDAO = CloudLetDAO.getInstance();
             cloudLetController = CloudLetController.getInstance(cloudLetDAO);
@@ -61,8 +64,8 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
         // Controllo argomento host
         try {
 
-            if (args.length != 1) {
-                Util.writeOutput("Usage: CloudLet <hostname> ",file);
+            if (args.length != 2) {
+                Util.writeOutput("Usage: CloudLet <master-hostname> <replication-factory>",file);
                 System.exit(1);
             }
 
@@ -71,30 +74,17 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
             String registryHost = args[0];
 
             globalInformation.setMasterAddress(registryHost);
-            globalInformation.setHost(registryHost);
-
+            globalInformation.setReplicationFactory(Integer.parseInt(args[1]));
+            System.out.println("INFO " + globalInformation.getMasterAddress()+ " "+globalInformation.getReplicationFactory());
             //Registro oggetto remoto
             Registry registry = LocateRegistry.createRegistry(Config.port);
             String completeName = "//" + Util.getPublicIPAddress() + ":" + Config.port + "/" + Config.cloudLetServiceName;
             CloudletApplication cloudletApplication  = new CloudletApplication();
             registry.rebind(completeName,cloudletApplication);
-            System.setProperty("java.rmi.server.hostname",Util.getPublicIPAddress());
+            System.setProperty("java.rmi.server.hostname", Objects.requireNonNull(Util.getPublicIPAddress()));
             asynchWrite.start();
             asynchRead.start();
             lifeThread.start();
-            Runtime.getRuntime().addShutdownHook(
-                    new Thread("app-shutdown-hook") {
-                        @Override
-                        public void run() {
-                            condition = false;
-                            try {
-                                asynchRead.join();
-                                asynchWrite.join();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    });
         } catch (Exception e) {
             System.err.println("CloudLet exception: ");
             e.printStackTrace();
@@ -102,6 +92,10 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
 
     }
 
+    /**
+     * Thread per l'aggiornamento della cache di lettura.
+     * Si cercano gli aggiornamenti per tutti file sottoscritti ,ovvero per quelli richiesti almeno una volta alla cloudlet
+     */
     private static Thread asynchRead = new Thread("AsynchRead"){
         @Override
         public void run() {
@@ -110,8 +104,10 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
                     HashMap<String,Integer> subscriptions = cloudLetDAO.getSubscritption();
                     for(Map.Entry<String,Integer> subscription : subscriptions.entrySet()){
                         FileLocation location = cloudLetController.getFileLocation(subscription.getKey(),"R");
-                        if(location == null || !location.isResult()) continue;
-                        if(location.getFileVersion()>subscription.getValue()){
+                        if(location == null || !location.isResult()) {
+                            cloudLetController.delete(subscription.getKey());
+                        }
+                        else if(location.getFileVersion()>subscription.getValue()){
                             System.out.println("PULL DELL AGGIORNAMENTO DI "+subscription.getKey());
                             cloudLetController.read(subscription.getKey());
                         }
@@ -124,6 +120,10 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
         }
     };
 
+    /**
+     * Thread che propaga gli aggiornamenti dei file dalla cache di scrittura al nucleo del sistema
+     *
+     */
     private static Thread asynchWrite = new Thread("AsynchWrite"){
         @Override
         public void run() {
@@ -131,12 +131,19 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
             while (condition){
                 try {
                     ArrayList<String> fileToWrite = cloudLetDAO.getTableRows(N_OF_UPDATES_SYSTEM);
+                    //Se il master ha richiesto lo spegnimento della cloudlet e la cache di scrittura è vuota la cloudlet
+                    // di essere pronta per la cancellazione
+                    if(fileToWrite.isEmpty() && globalInformation.getState().equals(com.sdcc_project.monitor.State.DELETING)){
+                        System.out.println("SEQUENZA DI SPEGNIMENTO");
+                        Util.writeOutput("SEQUENZA DI SPEGNIMENTO",file);
+                        cloudLetController.sendShutdownSignal();
+                    }
                     for(String file : fileToWrite){
                         ArrayList<String> data = cloudLetDAO.getFileData(file);
-                        cloudLetDAO.deleteFileFromCache(file,0);
                         String writeData = concatenateArrayOfString(data);
                         System.out.println("PUSH DELL AGGIORNAMENTO DI "+file + " "+writeData);
                         cloudLetController.writeToMaster(file,writeData);
+                        cloudLetDAO.deleteFileFromCache(file,0);
                     }
 
                 } catch (CloudLetException e) {
@@ -154,14 +161,22 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
         }
     };
 
+    /**
+     * Thread che invia segnali di vita al nucleo del sistema
+     * - Busy Richiede di creare una nuova cloudlet con cui condivedere il carico
+     * - Free risorse sottoutilizzate la cloudlet potrebbe essere cancellata
+     * - Normal
+     */
     private static Thread lifeThread = new Thread("LifeThread"){
         @Override
         public void run() {
             while(condition){
                 if(monitor.isOverCpuUsage() || monitor.isOverRamUsage()){
                     globalInformation.setState(com.sdcc_project.monitor.State.BUSY);
-                    System.out.println("MemoryUsage "+monitor.getMemoryUsage()+" CpuUsage "+monitor.getCpuUsage()+" state "+
-                    globalInformation.getState().toString());
+                }
+                else if(monitor.isUnderUsage()){
+                    globalInformation.setState(com.sdcc_project.monitor.State.FREE);
+                    System.out.println("SONO FREE");
                 }
                 else globalInformation.setState(com.sdcc_project.monitor.State.NORMAL);
                 cloudLetController.sendLifeSignal(globalInformation.getState());
@@ -184,14 +199,28 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
 
     }
 
+
     @Override
-    public Double getLatency(String ipAddress) throws RemoteException {
+    public Double getLatency(String ipAddress)  {
         return cloudLetController.getLatency(ipAddress);
     }
 
+    /**
+     * Servizio RMI con cui viene comunicato alla cloudlet di "appartenere" a un nuovo master
+     * @param newMasterAddress Nuovo master di competenza
+     */
     @Override
-    public boolean newMasterAddress(String newMasterAddress) throws RemoteException {
+    public void newMasterAddress(String newMasterAddress)  {
         globalInformation.setMasterAddress(newMasterAddress);
-        return true;
+        Util.writeOutput("nuovo indirizzo master "+newMasterAddress,file);
+    }
+
+    /**
+     * Viene richiesto alla cloudlet di ultimare le operazioni prima dello spegnimento
+     */
+    @Override
+    public void shutdownSignal()  {
+        Util.writeOutput("DELETE SIGNAL ",file);
+        globalInformation.setState(State.DELETING);
     }
 }

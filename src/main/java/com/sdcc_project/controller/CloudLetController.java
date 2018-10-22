@@ -8,13 +8,11 @@ import com.sdcc_project.entity.Record;
 import com.sdcc_project.exception.CloudLetException;
 import com.sdcc_project.exception.DataNodeException;
 import com.sdcc_project.exception.FileNotFoundException;
-import com.sdcc_project.exception.MasterException;
 import com.sdcc_project.service_interface.MasterInterface;
 import com.sdcc_project.service_interface.StorageInterface;
 import com.sdcc_project.monitor.State;
 import com.sdcc_project.util.GeoLocation;
 import com.sdcc_project.util.Util;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -50,14 +48,31 @@ public class CloudLetController {
         return instance;
     }
 
+    /**
+     * Inserisce un file nella cache della cloudlet
+     *
+     * @param record Record da inserire (Nome File e nuovo testo)
+     * @throws CloudLetException ...
+     */
     public void write(Record record) throws CloudLetException {
         cloudLetDAO.insertFile(record.getRecordID(),record.getRecordData());
     }
 
+    /**
+     * Lettura di un file (dalla cache o dal nucleo del sistema)
+     *
+     * @param filename nome del file da leggere
+     * @return il contenuto del file (se esistente)
+     * @throws CloudLetException ...
+     * @throws DataNodeException ...
+     * @throws FileNotFoundException ...
+     * @throws IOException ...
+     */
     public String readFromCache(String filename) throws CloudLetException, DataNodeException, FileNotFoundException, IOException {
         try{
             return cloudLetDAO.readFile(filename);
         } catch (FileNotFoundException e) {
+            //Il file non è nella cache lo cerco nel nucleo del sistema.
             System.out.println("File non in cache");
             Util.writeOutput(e.getMessage(),logFile);
             return read(filename);
@@ -65,7 +80,7 @@ public class CloudLetController {
     }
 
     /**
-     * Operazione di lettura di un file.
+     * Operazione di lettura di un file richiesto al nucleo del sistema.
      * @param fileName nome del file da leggere.
      */
     public String read(String fileName) throws CloudLetException, FileNotFoundException, IOException, DataNodeException {
@@ -151,7 +166,7 @@ public class CloudLetController {
 
 
     /**
-     * Scrittura di un dato su un file gestito da un DataNode
+     * Propagazione dell'operazione di scrittura di un file dalla cache verso il nucleo del sistema
      *
      * @param fileName nome del file su cui scrivere
      * @param data dati da scrivere
@@ -165,7 +180,7 @@ public class CloudLetController {
                 System.out.println("Write "+fileName+" "+data + " Port "+ primaryReplica);
                 try {
                     StorageInterface dataNode = (StorageInterface) registryLookup(primaryReplica, Config.dataNodeServiceName);
-                    boolean response =  dataNode.write(fileName,data,fileLocation.getFileVersion(),Config.REPLICATION_FACTORY);
+                    boolean response =  dataNode.write(fileName,data,fileLocation.getFileVersion(),globalInformation.getReplicationFactory());
                     System.out.println("Response "+ response);
                 }
                 catch (IOException e) {
@@ -187,6 +202,15 @@ public class CloudLetController {
     }
 
 
+    /**
+     * Lookup di un interfaccia remota via RMI
+     *
+     * @param registryHost host del servizio
+     * @param serviceName nome del servizio
+     * @return l'interfaccia ottenuta
+     * @throws RemoteException ...
+     * @throws NotBoundException ...
+     */
     private Remote registryLookup(String registryHost, String serviceName) throws RemoteException, NotBoundException {
 
         String completeName ="//" + registryHost + ":" + Config.port + "/" + serviceName;
@@ -196,6 +220,13 @@ public class CloudLetController {
 
     }
 
+    /**
+     * Operazione di Ping (o calcolo di geolocalizzazione) verso un host remoto per ottenere la latenza (usato per la ricerca della miglior cloudlet
+     * per un dispositvo ai bordi della rete)
+     *
+     * @param ipAddress Host da cui calcolare la latenza
+     * @return la latenza ottenuta
+     */
     public double getLatency(String ipAddress) {
         String linuxCommandResult;
         try {
@@ -212,6 +243,8 @@ public class CloudLetController {
             }
             System.out.println(lastLine);
             String[] resultArray = lastLine.split("/");
+            //Se c'è stato un errore allora l'host non è raggiungibile (nascosta da NAT...) calcolo la distanza con
+            // la geolocalizzazione
             if(resultArray.length<5)
                 return GeoLocation.getDistance(ipAddress,Util.getPublicIPAddress());
             return Double.parseDouble(resultArray[4]);
@@ -222,6 +255,12 @@ public class CloudLetController {
         }
     }
 
+    /**
+     * Chiede al nucleo del sistema quale sia la cloudlet più "vicina" a un host
+     *
+     * @param sourceIP host da cui calcolare la latenza
+     * @return indirizzo della cloudlet più vicina
+     */
     public String getMinorLatencyCloudlet(String sourceIP){
         try {
             MasterInterface masterInterface = (MasterInterface) registryLookup(globalInformation.getMasterAddress(),Config.masterServiceName);
@@ -234,20 +273,29 @@ public class CloudLetController {
 
     }
 
-    public boolean registerToMaster(){
-        boolean value = false;
+    /**
+     *
+     * Registrazione presso un master
+     */
+    public void registerToMaster(){
+
         try {
             MasterInterface masterInterface = (MasterInterface) registryLookup(globalInformation.getMasterAddress(),Config.masterServiceName);
-            value = masterInterface.addCloudlet(Util.getLocalIPAddress());
+            masterInterface.addCloudlet(Util.getPublicIPAddress());
         } catch (RemoteException | NotBoundException e) {
             e.printStackTrace();
         }
-        return value;
+
 
 
     }
 
 
+    /**
+     * Invio del sengnale di "vita" al master di competenza
+     *
+     * @param state Stato in cui si trova la cloudlet
+     */
     public void sendLifeSignal(State state) {
         try{
             MasterInterface masterInterface = (MasterInterface) registryLookup(globalInformation.getMasterAddress(),Config.masterServiceName);
@@ -258,6 +306,11 @@ public class CloudLetController {
         }
     }
 
+    /**
+     * Cancella un file dalla cache
+     * @param recordID nome del file da cancellare
+     * @return risultato operazione
+     */
     public boolean delete(String recordID) {
         try {
             cloudLetDAO.deleteFileFromCache(recordID,1);
@@ -269,6 +322,26 @@ public class CloudLetController {
         }
         return false;
 
+
+    }
+
+    /**
+     *
+     * Comunica al nucleo del sistema che è pronta a spegnersi
+     */
+    public void sendShutdownSignal() {
+        try {
+            MasterInterface masterInterface = (MasterInterface) registryLookup(globalInformation.getMasterAddress(),Config.masterServiceName);
+            masterInterface.shutdownCloudletSignal(globalInformation.getPublicIPAddress());
+        } catch (RemoteException | NotBoundException e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                Runtime.getRuntime().exec(" sudo shutdown 1");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
     }
 }

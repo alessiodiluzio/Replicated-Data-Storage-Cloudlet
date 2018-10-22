@@ -3,13 +3,16 @@ package com.sdcc_project.system_properties;
 import com.sdcc_project.monitor.State;
 import com.sdcc_project.util.Util;
 
+/**
+ * Contiene informazioni globali per lo scambio tra i vari componenti.
+ */
 public class GlobalInformation {
 
     private  String masterAddress;
-    private  String host;
     private State state = State.NORMAL;
     private static GlobalInformation instance;
     private  String publicIPAddress;
+    private int replicationFactory;
 
 
     private GlobalInformation(){
@@ -20,6 +23,14 @@ public class GlobalInformation {
         if(instance==null)
             instance = new GlobalInformation();
         return instance;
+    }
+
+    public int getReplicationFactory() {
+        return replicationFactory;
+    }
+
+    public void setReplicationFactory(int replicationFactory) {
+        this.replicationFactory = replicationFactory;
     }
 
     public String getPublicIPAddress() {
@@ -34,17 +45,8 @@ public class GlobalInformation {
         this.masterAddress = masterAddress;
     }
 
-    public String getHost() {
-        return host;
-    }
 
-    public  void setHost(String host) {
-        this.host = host;
-    }
 
-    public void setInstance(GlobalInformation instance) {
-        GlobalInformation.instance = instance;
-    }
 
     public State getState() {
         return state;

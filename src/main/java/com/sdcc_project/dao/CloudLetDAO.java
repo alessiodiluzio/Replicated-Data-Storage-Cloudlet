@@ -21,7 +21,7 @@ public class CloudLetDAO {
     private CloudLetDAO() throws CloudLetException {
         System.out.println("Creo cloudlet dao");
         loadDB();
-        this.instance = this;
+        instance = this;
     }
 
     public static CloudLetDAO getInstance() throws CloudLetException {
@@ -31,7 +31,15 @@ public class CloudLetDAO {
     }
 
 
-    public int getFileLastVersion(String filename) throws FileNotFoundException, CloudLetException {
+    /**
+     * Prende il numero di versio piu alto per un file nella cache di scrittura
+     *
+     * @param filename nome del file di cui si desidera la versione
+     * @return la versione richiesta
+     * @throws FileNotFoundException ...
+     * @throws CloudLetException ...
+     */
+    private int getFileLastVersion(String filename) throws FileNotFoundException, CloudLetException {
         String query = "SELECT MAX(version) FROM CloudLetWriteTable WHERE filename=?";
         try(PreparedStatement preparedStatement = connection.prepareStatement(query)){
             preparedStatement.setString(1,filename);
@@ -47,7 +55,13 @@ public class CloudLetDAO {
     }
 
 
-
+    /**
+     * Preleva n righe dalla cache di scrittura per propagarne l'aggiornamento verso il nucleo del sistema
+     *
+     * @param nrows numero di righe da prelevare
+     * @return una lista di file da inviare al nucleo del sistema
+     * @throws CloudLetException ...
+     */
     public ArrayList<String> getTableRows(int nrows) throws CloudLetException {
         ArrayList<String> fileNames = new ArrayList<>();
         String query = "SELECT DISTINCT filename FROM CloudLetWriteTable OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY";
@@ -64,6 +78,13 @@ public class CloudLetDAO {
         }
     }
 
+    /**
+     * Preleva il contenuto di un file dalla cache di scrittura
+     *
+     * @param fileName nome del file da prelevare
+     * @return contenuto del file .
+     * @throws CloudLetException ...
+     */
     public ArrayList<String> getFileData(String fileName) throws CloudLetException {
         ArrayList<String> fileData = new ArrayList<>();
         String query = "SELECT data FROM CloudLetWriteTable WHERE filename = ? ORDER BY version ";
@@ -82,6 +103,11 @@ public class CloudLetDAO {
         }
     }
 
+    /**
+     * Crea le tabelle del DB locale alla cloudlet
+     *
+     * @throws CloudLetException ...
+     */
     private  void createTable() throws CloudLetException {
         try (Statement createStatement = connection.createStatement()) {
             String createWTBL = "create TABLE CloudLetWriteTable(filename varchar(50),data blob,version int)";
@@ -95,6 +121,14 @@ public class CloudLetDAO {
 
     }
 
+    /**
+     * Preleva l'elenco delle sottoscrizione della cloudlet.
+     * Una cloudlet si sottoscrive ad un file non appena un dispositivo ne richiede la lettura ,
+     * in seguito la cloudlet ne preleva automaticamente gli aggiornamenti e li mantiene in cache di lettura.
+     *
+     * @return sottoscrizioni della cloudlet
+     * @throws MasterException ...
+     */
     public HashMap<String,Integer> getSubscritption() throws MasterException {
         String query ="SELECT filename,version FROM CloudLetReadTable";
         HashMap<String,Integer> result = new HashMap<>();
@@ -111,6 +145,14 @@ public class CloudLetDAO {
         }
     }
 
+    /**
+     * Lettura di un file dalla cache di lettura
+     *
+     * @param filename nome del file da leggere
+     * @return contenuto del file
+     * @throws FileNotFoundException ...
+     * @throws CloudLetException ...
+     */
     public String readFile(String filename) throws FileNotFoundException, CloudLetException {
         String query = "SELECT data FROM CloudLetReadTable WHERE filename=?";
         try(PreparedStatement preparedStatement = connection.prepareStatement(query)){
@@ -118,8 +160,7 @@ public class CloudLetDAO {
             ResultSet resultSet = preparedStatement.executeQuery();
             if(resultSet.next()){
                 Blob blobData = resultSet.getBlob(1);
-                String result = new String(blobData.getBytes(1L, (int) blobData.length()));
-                return result;
+                return new String(blobData.getBytes(1L, (int) blobData.length()));
             }
             throw new FileNotFoundException("File not in cache");
         } catch (SQLException e) {
@@ -128,6 +169,13 @@ public class CloudLetDAO {
         }
     }
 
+    /**
+     * Inserisce un file nella cache di scrittura
+     *
+     * @param filename nome del file da inserire
+     * @param data contenuto del file
+     * @throws CloudLetException ...
+     */
     public synchronized void insertFile(String filename,String data) throws CloudLetException {
         String query = "INSERT into CloudLetWriteTable values(?,?,?)";
         try(PreparedStatement preparedStatement = connection.prepareStatement(query)){
@@ -155,6 +203,13 @@ public class CloudLetDAO {
 
     }
 
+    /**
+     * Cancella un file da una cache
+     *
+     * @param filename nome del file da cancellare
+     * @param cacheType (1 per cache di lettura ,qualsiasi altro valore cache di scrittura)
+     * @throws CloudLetException ...
+     */
     public void deleteFileFromCache(String filename,int cacheType) throws CloudLetException {
         String query ;
         if(cacheType==1){
@@ -170,6 +225,14 @@ public class CloudLetDAO {
         }
     }
 
+    /**
+     * Inserimento di un file in cache di lettura
+     *
+     * @param filename nome del file
+     * @param data contenuto
+     * @param version versione
+     * @throws CloudLetException ...
+     */
     public void insertFileToReadCache(String filename,String data,int version) throws CloudLetException {
         deleteFileFromCache(filename,1);
         String query = "INSERT INTO CloudLetReadTable values (?,?,?)";
@@ -189,7 +252,7 @@ public class CloudLetDAO {
     }
 
     /**
-     * Ricarica dal disco il Database con le informazioni di posizione dei file.
+     * Operazioni di avvio del database locale alla cache
      *
      */
     private void loadDB() throws CloudLetException {
@@ -202,6 +265,9 @@ public class CloudLetDAO {
         }
     }
 
+    /**
+     * Creazione del db locale alla cache
+     */
     private void createDB()  {
         String dbUri = "jdbc:derby:memory:"+"cloudLet" +"DB"+";create=true;user="
                 +"cloudlet"+";password="+"cloudlet";

@@ -1,5 +1,9 @@
 package com.sdcc_project.entity;
 
+/**
+ * Classe usata per l'invio di dati di un file con metodi REST
+ */
+@SuppressWarnings("unused")
 public class Record {
     private String recordID;
     private String recordData;
@@ -16,12 +20,13 @@ public class Record {
         return recordID;
     }
 
-    public void setRecordID(String recordID) {
-        this.recordID = recordID;
-    }
 
     public String getRecordData() {
         return recordData;
+    }
+
+    public void setRecordID(String recordID) {
+        this.recordID = recordID;
     }
 
     public void setRecordData(String recordData) {
