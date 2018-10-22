@@ -42,6 +42,7 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
     private static GlobalInformation globalInformation;
     private static Registry registry;
     private static String completeName;
+    private static CloudletApplication publishedObject;
 
 
     protected CloudletApplication() throws RemoteException {
@@ -82,8 +83,8 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
             //Registro oggetto remoto
             registry = LocateRegistry.createRegistry(Config.port);
             completeName = "//" + Util.getPublicIPAddress() + ":" + Config.port + "/" + Config.cloudLetServiceName;
-            CloudletApplication cloudletApplication  = new CloudletApplication();
-            registry.rebind(completeName,cloudletApplication);
+            publishedObject  = new CloudletApplication();
+            registry.rebind(completeName,publishedObject);
             System.setProperty("java.rmi.server.hostname", Objects.requireNonNull(Util.getPublicIPAddress()));
             asynchWrite.start();
             asynchRead.start();
@@ -140,6 +141,7 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
                         System.out.println("SEQUENZA DI SPEGNIMENTO");
                         Util.writeOutput("SEQUENZA DI SPEGNIMENTO",file);
                         cloudLetController.sendShutdownSignal();
+                        terminate();
                         System.exit(1);
                     }
                     for(String file : fileToWrite){
@@ -229,10 +231,10 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
     }
 
 
-    public void terminate() {
+    public static void terminate() {
         try {
             registry.unbind(completeName);
-            UnicastRemoteObject.unexportObject(this, true);
+            UnicastRemoteObject.unexportObject(publishedObject, true);
         }
         catch (RemoteException | NotBoundException e) {
             Util.writeOutput(e.getMessage(),file);
