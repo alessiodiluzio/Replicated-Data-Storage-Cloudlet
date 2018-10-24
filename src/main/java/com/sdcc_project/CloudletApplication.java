@@ -141,11 +141,24 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
                         terminate();
                         System.exit(1);
                     }
-                    for(String file : fileToWrite){
-                        ArrayList<String> data = cloudLetDAO.getFileData(file);
+                    for(String fileTW : fileToWrite){
+                        ArrayList<String> data = cloudLetDAO.getFileData(fileTW);
                         String writeData = concatenateArrayOfString(data);
-                        cloudLetController.writeToMaster(file,writeData);
-                        cloudLetDAO.deleteFileFromCache(file,0);
+                        try {
+                            cloudLetController.writeToMaster(fileTW, writeData);
+                            cloudLetDAO.deleteFileFromCache(fileTW, 0);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            Util.writeOutput(e.getMessage(),file);
+                        } catch (DataNodeException e) {
+                            e.printStackTrace();
+                            Util.writeOutput(e.getMessage(),file);
+                            System.out.println("ERROR 500 INTERNAL SERVER ERROR");
+                        } catch (NotBoundException e) {
+                            Util.writeOutput(e.getMessage(),file);
+                            e.printStackTrace();
+                            System.out.println("ERROR IMPOSSIBLE TO CONTACT MASTER");
+                        }
                     }
 
                 } catch (CloudLetException e) {

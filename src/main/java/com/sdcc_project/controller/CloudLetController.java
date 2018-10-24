@@ -105,7 +105,6 @@ public class CloudLetController {
                     while ((str = br.readLine()) != null) {
                         output.append(str).append("\n");
                     }
-                    System.out.println(output.toString());
                     br.close();
                     //Cancello il file temporaneo
                     Path path = Paths.get(fileName);
@@ -168,28 +167,16 @@ public class CloudLetController {
      * @param fileName nome del file su cui scrivere
      * @param data dati da scrivere
      */
-    public void writeToMaster(String fileName, String data){
+    public void writeToMaster(String fileName, String data) throws RemoteException, NotBoundException, DataNodeException {
         FileLocation fileLocation = getFileLocation(fileName, "W");
         if (fileLocation != null) {
             if (fileLocation.isResult()) {
                 ArrayList<String> dataNodeAddresses = fileLocation.getFilePositions();
                 String primaryReplica = dataNodeAddresses.get(0);
-                try {
-                    StorageInterface dataNode = (StorageInterface) registryLookup(primaryReplica, Config.dataNodeServiceName);
-                    dataNode.write(fileName,data,fileLocation.getFileVersion(),globalInformation.getReplicationFactory());
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
-                    Util.writeOutput(e.getMessage(),logFile);
-                } catch (DataNodeException e) {
-                    e.printStackTrace();
-                    Util.writeOutput(e.getMessage(),logFile);
-                    System.out.println("ERROR 500 INTERNAL SERVER ERROR");
-                } catch (NotBoundException e) {
-                    Util.writeOutput(e.getMessage(),logFile);
-                    e.printStackTrace();
-                    System.out.println("ERROR IMPOSSIBLE TO CONTACT MASTER");
-                }
+                StorageInterface dataNode = (StorageInterface) registryLookup(primaryReplica, Config.dataNodeServiceName);
+                dataNode.write(fileName,data,fileLocation.getFileVersion(),globalInformation.getReplicationFactory());
+
+
 
             }
         } else System.out.print("File not found!");
