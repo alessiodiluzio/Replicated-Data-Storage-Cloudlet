@@ -204,10 +204,18 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
         }
     };
 
+    /**
+     * Concatena in unica stringa varie righe.
+     * Usata in caso di aggiornamenti multipli ad un file che vengono inglobati in un 'unica scrittura da inviare
+     * al Master.
+     *
+     * @param arrayList ArrayList che contiene tutte le righe del file da inviare
+     * @return una stringa composta dagli elementi di arrayList
+     */
     private static String concatenateArrayOfString(ArrayList<String> arrayList){
         StringBuilder result = new StringBuilder();
-        for(String str : arrayList){
-            result.append(str).append("\n");
+        for(int i = 0;i<arrayList.size()-1;i++){
+            result.append(arrayList.get(i)).append("\n");
         }
         return result.toString();
 

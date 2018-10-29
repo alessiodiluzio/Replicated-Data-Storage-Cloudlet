@@ -257,7 +257,6 @@ public class CloudLetDAO {
     private void loadDB() throws CloudLetException {
         try{
             createDB();
-            System.out.println(connection.isClosed());
         } catch (Exception e) {
             e.printStackTrace();
             throw new CloudLetException("Impossible to load/create DB");

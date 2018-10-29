@@ -78,8 +78,8 @@ public class Monitor {
                     if (cpuUnderUsageTime >= 20 && ramUnderUsageTime >= 20) {
                         underUsage = true;
                     }
-                    System.out.println("Uso Locale : CPU " + cpuUsage + " RAM " + " cpuUnder "+cpuUnderUsageTime+" ramUnder "+ramUnderUsageTime+ " under "+underUsage);
-                    Util.writeOutput("Uso Locale : CPU " + cpuUsage + " RAM " + " cpuUnder "+cpuUnderUsageTime+" ramUnder "+ramUnderUsageTime+ " under "+underUsage, file);
+                    System.out.println("Uso Locale : CPU " + cpuUsage + " RAM " + memoryUsage+" cpuUnder "+cpuUnderUsageTime+" ramUnder "+ramUnderUsageTime+ " under "+underUsage);
+                    Util.writeOutput("Uso Locale : CPU " + cpuUsage + " RAM "+memoryUsage + " cpuUnder "+cpuUnderUsageTime+" ramUnder "+ramUnderUsageTime+ " under "+underUsage, file);
                     try {
                         sleep(15000);
                     } catch (InterruptedException e) {

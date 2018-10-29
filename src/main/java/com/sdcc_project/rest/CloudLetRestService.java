@@ -78,12 +78,6 @@ public class CloudLetRestService {
         return new ResponseEntity<>(result,HttpStatus.OK);
     }
 
-    @RequestMapping(path="ciao",method = RequestMethod.GET)
-    public ResponseEntity<String> saluta(){
-        if(notReply())
-            return new ResponseEntity<>("",HttpStatus.INTERNAL_SERVER_ERROR);
-        return new ResponseEntity<>("CIAO!",HttpStatus.OK);
-    }
 
     /**
      * Servizio REST con cui un dispositivo ai bordi della rete richiede l'indirizzo della cloudlet
