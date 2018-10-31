@@ -214,8 +214,8 @@ public class CloudletApplication extends UnicastRemoteObject implements Cloudlet
      */
     private static String concatenateArrayOfString(ArrayList<String> arrayList){
         StringBuilder result = new StringBuilder();
-        for(int i = 0;i<arrayList.size()-1;i++){
-            result.append(arrayList.get(i)).append("\n");
+        for(String fileline : arrayList){
+            result.append(fileline).append("\n");
         }
         return result.toString();
 
